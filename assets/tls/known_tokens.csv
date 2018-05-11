@@ -1,0 +1,6 @@
+PpP6Mm3pAoPVqcKOKUu0x1dh7b1959Fi,admin,admin
+JJ2PKHxjiU6EYvIt18BqwdSK1HvWh8pt,kubelet,kubelet
+jT0hJk9L6cIw5UpYDNhsRwcj3Z2n62B6,kube_proxy,kube_proxy
+VgkUHfrW07zNxrb0ucFyX7NBnSJN9Xp6,system:scheduler,system:scheduler
+uXrdZ1YKF6qlYm3sHje2iEXMGAGDWOIU,system:controller_manager,system:controller_manager
+0S1I4iJeFjq5fopPwwCwTp3xFpEZfeUl,system:dns,system:dns

@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: bootstrap-token-op5j50
+  namespace: kube-system
+type: bootstrap.kubernetes.io/token
+stringData:
+  token-id: "op5j50"
+  token-secret: "1uvf1b4p1cs36t0a"
+  usage-bootstrap-authentication: "true"

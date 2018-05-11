@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: kube-apiserver
+  namespace: kube-system
+  labels:
+    tier: control-plane
+    k8s-app: kube-apiserver
+spec:
+  selector:
+    matchLabels:
+      tier: control-plane
+      k8s-app: kube-apiserver
+  template:
+    metadata:
+      labels:
+        tier: control-plane
+        k8s-app: kube-apiserver
+      annotations:
+        checkpointer.alpha.coreos.com/checkpoint: "true"
+    spec:
+      containers:
+      - name: kube-apiserver
+        image: k8s.gcr.io/hyperkube:v1.10.0
+        command:
+        - /hyperkube
+        - apiserver
+        - --admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,ValidatingAdmissionWebhook,ResourceQuota,DefaultTolerationSeconds,NodeRestriction,MutatingAdmissionWebhook
+        - --advertise-address=$(POD_IP)
+        - --allow-privileged=true
+        - --anonymous-auth=false
+        - --authorization-mode=Node,RBAC
+        - --bind-address=0.0.0.0
+        - --etcd-cafile=/etc/kubernetes/secrets/etcd-client-ca.crt
+        - --etcd-certfile=/etc/kubernetes/secrets/etcd-client.crt
+        - --etcd-keyfile=/etc/kubernetes/secrets/etcd-client.key
+        - --etcd-servers=https://192.168.10.93:4001,https://192.168.10.94:4001,https://192.168.10.92:4001
+        - --insecure-port=8080
+        #- --kubelet-client-certificate=/etc/kubernetes/secrets/apiserver.crt
+        #- --kubelet-client-key=/etc/kubernetes/secrets/apiserver.key
+        - --secure-port=6443
+        #- --service-account-key-file=/etc/kubernetes/secrets/service-account.pub
+        - --service-cluster-ip-range=10.254.0.0/16
+        - --storage-backend=etcd3
+        - --tls-cert-file=/etc/kubernetes/secrets/apiserver.crt
+        - --tls-private-key-file=/etc/kubernetes/secrets/apiserver.key
+        - --client-ca-file=/etc/kubernetes/secrets/ca.crt
+        env:
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        volumeMounts:
+        - mountPath: /etc/ssl/certs
+          name: ssl-certs-host
+          readOnly: true
+        - mountPath: /etc/kubernetes/secrets
+          name: secrets
+          readOnly: true
+        - mountPath: /etc/kubernetes/ssl
+          name: ssl-certs-host2
+          readOnly: true
+      hostNetwork: true
+      nodeSelector:
+        node-role.kubernetes.io/master: "true"
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
+      volumes:
+      - name: ssl-certs-host
+        hostPath:
+          path: /usr/local/share/ca-certificates
+      - name: secrets
+        secret:
+          secretName: kube-apiserver
+      - name: ssl-certs-host2
+        hostPath:
+          path: /etc/kubernetes/ssl
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate
